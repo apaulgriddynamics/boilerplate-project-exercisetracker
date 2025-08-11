@@ -5,6 +5,27 @@ class ExerciseTrackerService {
     this.db = new DatabaseManager(dbPath);
   }
 
+  validateDate(date, fieldName = "date") {
+    if (!date) {
+      return null;
+    }
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      throw new Error(`${fieldName} must be in YYYY-MM-DD format`);
+    }
+
+    const parsedDate = new Date(date);
+    if (
+      isNaN(parsedDate.getTime()) ||
+      parsedDate.toISOString().split("T")[0] !== date
+    ) {
+      throw new Error(`Invalid ${fieldName} provided`);
+    }
+
+    return date;
+  }
+
   validateUsername(username) {
     if (typeof username !== "string") {
       throw new Error("Username is required and must be a string");
@@ -41,20 +62,13 @@ class ExerciseTrackerService {
     }
 
     let validDate = null;
-    if (date) {
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dateRegex.test(date)) {
-        errors.push("Date must be in YYYY-MM-DD format");
-      } else {
-        const parsedDate = new Date(date);
-        if (isNaN(parsedDate.getTime())) {
-          errors.push("Invalid date provided");
-        } else {
-          validDate = date;
-        }
+    try {
+      validDate = this.validateDate(date);
+      if (!validDate) {
+        validDate = new Date().toISOString().split("T")[0];
       }
-    } else {
-      validDate = new Date().toISOString().split("T")[0];
+    } catch (error) {
+      errors.push(error.message);
     }
 
     if (errors.length > 0) {
@@ -82,32 +96,16 @@ class ExerciseTrackerService {
     let validTo = null;
     let validLimit = null;
 
-    if (from) {
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dateRegex.test(from)) {
-        errors.push("from date must be in YYYY-MM-DD format");
-      } else {
-        const parsedDate = new Date(from);
-        if (isNaN(parsedDate.getTime())) {
-          errors.push("Invalid from date provided");
-        } else {
-          validFrom = from;
-        }
-      }
+    try {
+      validFrom = this.validateDate(from, "from date");
+    } catch (error) {
+      errors.push(error.message);
     }
 
-    if (to) {
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dateRegex.test(to)) {
-        errors.push("to date must be in YYYY-MM-DD format");
-      } else {
-        const parsedDate = new Date(to);
-        if (isNaN(parsedDate.getTime())) {
-          errors.push("Invalid to date provided");
-        } else {
-          validTo = to;
-        }
-      }
+    try {
+      validTo = this.validateDate(to, "to date");
+    } catch (error) {
+      errors.push(error.message);
     }
 
     if (limit) {

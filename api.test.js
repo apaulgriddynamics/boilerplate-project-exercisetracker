@@ -155,6 +155,20 @@ describe("Exercise Tracker API", () => {
       expect(response.body).toHaveProperty("error");
       expect(response.body.error).toContain("YYYY-MM-DD");
     });
+
+    test("should reject invalid dates like February 31st", async () => {
+      const response = await request(app)
+        .post(`/api/users/${testUserId}/exercises`)
+        .send({
+          description: "Running",
+          duration: 30,
+          date: "2021-02-31",
+        })
+        .expect(400);
+
+      expect(response.body).toHaveProperty("error");
+      expect(response.body.error).toContain("Invalid date");
+    });
   });
 
   describe("GET /api/users/:_id/logs", () => {
@@ -219,6 +233,15 @@ describe("Exercise Tracker API", () => {
 
       expect(response.body).toHaveProperty("error");
       expect(response.body.error).toContain("YYYY-MM-DD");
+    });
+
+    test("should reject invalid dates like February 31st in query", async () => {
+      const response = await request(app)
+        .get(`/api/users/${testUserId}/logs?from=2021-02-31`)
+        .expect(400);
+
+      expect(response.body).toHaveProperty("error");
+      expect(response.body.error).toContain("Invalid");
     });
 
     test("should reject invalid limit", async () => {
